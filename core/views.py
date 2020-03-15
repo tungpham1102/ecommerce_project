@@ -6,6 +6,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from .models import Item, OrderItem, Order
 from django.views.generic import ListView, DetailView, View
 from django.utils import timezone
+from .forms import CheckoutForm
 # Create your views here.
 
 
@@ -38,8 +39,20 @@ class ItemDetailView(DetailView):
     template_name = 'core/product.html'
 
 
-def checkout(request):
-    return render(request, 'core/checkout.html')
+class CheckoutView(View):
+    def get(self, *args, **kwargs):
+        # form
+        form = CheckoutForm()
+        context = {
+            'form': form
+        }
+        return render(self.request, 'core/checkout.html', context)
+
+    def post(self, *args, **kwargs):
+        form = CheckoutForm(self.request.POST or None)
+        if form.is_valid():
+            return redirect('core:checkout')
+
 
 
 @login_required
