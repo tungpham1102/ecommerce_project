@@ -3,7 +3,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.shortcuts import render, redirect, get_object_or_404
-from .models import Item, OrderItem, Order
+from .models import Item, OrderItem, Order, BillingAddress
 from django.views.generic import ListView, DetailView, View
 from django.utils import timezone
 from .forms import CheckoutForm
@@ -50,9 +50,33 @@ class CheckoutView(View):
 
     def post(self, *args, **kwargs):
         form = CheckoutForm(self.request.POST or None)
-        if form.is_valid():
+        try:
+            order = Order.objects.get(user=self.request.user, ordered = False)
+            if form.is_valid():
+                street_address = form.cleaned_data('')
+                apartment_address = form.cleaned_data('')
+                country = form.cleaned_data('')
+                zip = form.cleaned_data('')
+                # TODO: add functionality for these fields
+                # same_billing_address = form.cleaned_data('')
+                # save_info = form.cleaned_data('')
+                # payment_option = form.cleaned_data('')
+                billing_address = BillingAddress(
+                    user=self.request.user,
+                    street_address=street_address,
+                    apartment_address=apartment_address,
+                    country=country,
+                    zip=zip
+                )
+                billing_address.save()
+                order.billing_address = billing_address
+                order.save()
+                # TODO: add redirect to the selected payment option
+            messages.warning(self.request, "Failed Checkout")
             return redirect('core:checkout')
-
+        except ObjectDoesNotExist:
+            messages.error(self.request, "You do not have an active order")
+            return redirect('core:order-summary')
 
 
 @login_required
