@@ -53,10 +53,10 @@ class CheckoutView(View):
         try:
             order = Order.objects.get(user=self.request.user, ordered = False)
             if form.is_valid():
-                street_address = form.cleaned_data('')
-                apartment_address = form.cleaned_data('')
-                country = form.cleaned_data('')
-                zip = form.cleaned_data('')
+                street_address = form.cleaned_data.get('street_address')
+                apartment_address = form.cleaned_data.get('apartment_address')
+                country = form.cleaned_data.get('country')
+                zip = form.cleaned_data.get('zip')
                 # TODO: add functionality for these fields
                 # same_billing_address = form.cleaned_data('')
                 # save_info = form.cleaned_data('')
@@ -72,7 +72,6 @@ class CheckoutView(View):
                 order.billing_address = billing_address
                 order.save()
                 # TODO: add redirect to the selected payment option
-            messages.warning(self.request, "Failed Checkout")
             return redirect('core:checkout')
         except ObjectDoesNotExist:
             messages.error(self.request, "You do not have an active order")
@@ -146,7 +145,7 @@ def remove_single_item_from_cart(request, slug):
     )
     if order_qs.exists():
         order = order_qs[0]
-        #check if the order item is in the order
+        # check if the order item is in the order
         if order.items.filter(item__slug = item.slug).exists():
             order_item = OrderItem.objects.filter(
                 item = item,
